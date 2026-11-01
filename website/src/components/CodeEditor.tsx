@@ -150,7 +150,7 @@ export default function CodeEditor({
       // theme={oneDark}
       extensions={extensions}
       onChange={onChange}
-      placeholder="Write your C code here..."
+      placeholder="在这里写你的 C 代码…"
       basicSetup={{
         lineNumbers: true,
         highlightActiveLineGutter: true,

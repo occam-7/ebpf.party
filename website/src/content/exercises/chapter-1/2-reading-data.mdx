@@ -1,10 +1,10 @@
-In the previous exercise, we used a helper to ask "Who is running?".
+在上一个练习里，我们用了一个辅助函数来问「谁在运行？」。
 
-Now let's answer questions about the running process by querying the data available to the tracepoint.
+现在，让我们通过查询挂载点能拿到的数据，来回答关于正在运行的进程的问题。
 
-For `sched_process_exec`, the kernel provides a structure with specific event data, like the Process ID (PID) and the filename.
+对于 `sched_process_exec`，内核会提供一个包含特定事件数据的结构体，例如进程 ID（PID）和文件名。
 
-You can find the format of the context that the kernel provides on any Linux computer, by running:
+在任意 Linux 机器上执行下面的命令，就能看到内核提供的上下文格式：
 ```bash
 $ cat /sys/kernel/tracing/events/sched/sched_process_exec/format
 format:
@@ -17,61 +17,61 @@ format:
   pid_t old_pid;                        offset:16;  size:4;
 ```
 
-Alternatively, <kbd>Ctrl</kbd>+<kbd>Click</kbd> on the `trace_event_raw_sched_process_exec` in the editor to see the definition.
+或者，在编辑器里 <kbd>Ctrl</kbd>+<kbd>Click</kbd> 点一下 `trace_event_raw_sched_process_exec` 就能看到它的定义。
 
-## The challenge
-Extract the **PID** and the **filename** of the program being executed, directly from the event data.
+## 挑战
+直接从事件数据里提取被执行程序的 **PID** 和 **filename**。
 
-Getting the PID is straightforward in this case, we can just read it:
+获取 PID 在这里很简单，直接读就行：
 ```c
 int pid = ctx->pid;
 DEBUG_NUM("PID", pid);
 ```
 
-Reading the filename, however, is more involved. If you look at the type declaration above,
-it is `__data_loc char[]`.
+但读取文件名就麻烦一些。看看上面的类型声明，
+它是 `__data_loc char[]`。
 
-This is not a regular pointer; the `__data_loc` prefix means the field just contains the **encoded location** of the string, not the string itself.
+这不是一个普通的指针；`__data_loc` 前缀表示该字段只包含字符串的**编码位置**，而不是字符串本身。
 
-Basically, the filename field contains a 32-bit integer that packs two pieces of information:
+本质上，filename 字段里装的是一个 32 位整数，打包了两部分信息：
 
-  - Lower 16 bits: The Offset (How far away the string is from the start of the structure)
-  - Upper 16 bits: The Length (How long the string is)
+  - 低 16 位：偏移量（字符串距离结构体起始位置多远）
+  - 高 16 位：长度（字符串有多长）
 
-To get the actual string, we need to decode its location:
+要拿到真正的字符串，我们需要解码它的位置：
 
-  1. Read the `__data_loc_filename` field
-  2. Mask the lower 16 bits (`val & 0xFFFF`) to get the offset
-  3. Right shift the upper bits (`val >> 16`) to get the length 
-  4. Add that offset to the `ctx` pointer
+  1. 读取 `__data_loc_filename` 字段
+  2. 掩掉低 16 位（`val & 0xFFFF`）得到偏移量
+  3. 右移取出高位（`val >> 16`）得到长度
+  4. 把这个偏移量加到 `ctx` 指针上
 
-However, we can't really read the data directly from the calculated address:
+不过，我们没法直接从算出来的地址读取数据：
 
 ```c
 char* fname = (void *)ctx + off;
 DEBUG_STR("Filename", fname);
 ```
 
-Why not?
+为什么不行？
 
-As we saw in the intro, eBPF programs run in a sandbox. Calculated addresses like this one (`ctx + off`) point to Kernel memory (not the program's stack).
+正如我们在入门部分看到的，eBPF 程序运行在沙箱中。像 `ctx + off` 这样算出来的地址指向的是内核内存（不是程序的栈）。
 
-When we call `DEBUG_STR` with a non-local address, the kernel helpers will refuse to read from that memory range, leaving the "DEBUG" memory uninitialized.
+当我们用一个非本地地址调用 `DEBUG_STR` 时，内核辅助函数会拒绝从那段内存读取，于是「DEBUG」的内存就保持未初始化状态。
 
-You can try it though! It will not crash the kernel, instead, it will return something like: `�����`.
+不过你可以试一试！它不会让内核崩溃，而是会返回类似这样的东西：`�����`。
 
-To solve this, we need to copy that data to "local memory" (stack) using the [bpf_probe_read_kernel_str](https://docs.ebpf.io/linux/helper-function/bpf_probe_read_kernel_str/) helper.
+要解决这个问题，我们需要用 [bpf_probe_read_kernel_str](https://docs.ebpf.io/linux/helper-function/bpf_probe_read_kernel_str/) 辅助函数把数据复制到「本地内存」（栈）里。
 
 ```c
 char fname[32];
 bpf_probe_read_kernel_str(fname, sizeof(fname), (void *)ctx + off);
 ```
 
-After this, the `fname` buffer will be populated, and we can call `DEBUG_STR` on it.
+这样之后，`fname` 缓冲区就被填好了，我们可以对它调用 `DEBUG_STR`。
 
-### Your task
+### 你的任务
 
-If you added `DEBUG_STR`/`DEBUG_NUM` as explained above, you should see multiple standard programs, but there's one that stands out. Use `SUBMIT_STR_LEN(buff, len)` to submit it.
+如果你按上面的说明加了 `DEBUG_STR`/`DEBUG_NUM`，应该会看到多个标准程序，但其中有一个格外扎眼。用 `SUBMIT_STR_LEN(buff, len)` 把它提交上去。
 
 import QuickReference from '../../../components/QuickReference.tsx';
 

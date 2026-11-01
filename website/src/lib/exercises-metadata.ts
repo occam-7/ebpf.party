@@ -24,17 +24,17 @@ export const CONTENT_METADATA: ContentMetadata = {
     {
       number: 0,
       slug: "chapter-0",
-      title: "Introduction",
+      title: "简介",
       exercises: [
         {
           slug: "1_theory",
-          title: "Intro to eBPF",
+          title: "eBPF 入门",
           exerciseId: "theory",
           contentPath: "chapter-0/1_theory",
         },
         {
           slug: "2_platform_overview",
-          title: "Platform overview",
+          title: "平台概览",
           exerciseId: "platform-overview",
           codeFile: "1_editor_intro.c",
           contentPath: "chapter-0/2_platform_overview",
@@ -44,32 +44,32 @@ export const CONTENT_METADATA: ContentMetadata = {
     {
       number: 1,
       slug: "chapter-1",
-      title: "Concept familiarization",
+      title: "熟悉基本概念",
       exercises: [
         {
           slug: "1-intro",
-          title: "Process context",
+          title: "进程上下文",
           exerciseId: "concept-intro",
           codeFile: "1_ambient_intro.c",
           contentPath: "chapter-1/1-intro",
         },
         {
           slug: "2-reading-data",
-          title: "Reading event data",
+          title: "读取事件数据",
           exerciseId: "reading-event-data",
           codeFile: "2_event_data.c",
           contentPath: "chapter-1/2-reading-data",
         },
         {
           slug: "3-reading-syscalls",
-          title: "Tracing a system call",
+          title: "跟踪一次系统调用",
           exerciseId: "reading-syscalls",
           codeFile: "3_execve_syscall.c",
           contentPath: "chapter-1/3-reading-syscalls",
         },
         {
           slug: "4-reading-syscall-arrays",
-          title: "Reading syscall arrays",
+          title: "读取系统调用参数数组",
           exerciseId: "read-argv-password",
           codeFile: "4_execve_argv.c",
           contentPath: "chapter-1/4-reading-syscall-arrays",
@@ -79,32 +79,32 @@ export const CONTENT_METADATA: ContentMetadata = {
     {
       number: 2,
       slug: "chapter-2",
-      title: "Stateful eBPF",
+      title: "有状态的 eBPF",
       exercises: [
         {
           slug: "intro-maps-and-programs",
-          title: "Maps and multiple programs",
+          title: "map 与多程序协作",
           exerciseId: "intro-maps-and-programs",
           codeFile: "0_maps_intro.c",
           contentPath: "chapter-2/intro-maps-and-programs",
         },
         {
           slug: "read-buffer-contents",
-          title: "Reading syscall buffers",
+          title: "读取系统调用的缓冲区",
           exerciseId: "read-buffer-contents",
           codeFile: "1_read_buffer.c",
           contentPath: "chapter-2/read-buffer-contents",
         },
         {
           slug: "read-file-password",
-          title: "Cross-syscall state tracking",
+          title: "跨系统调用的状态跟踪",
           exerciseId: "read-file-password",
           codeFile: "2_read_file_password.c",
           contentPath: "chapter-2/read-file-password",
         },
         {
           slug: "socket-and-connect",
-          title: "Tracking network connections",
+          title: "跟踪网络连接",
           exerciseId: "socket-and-connect",
           codeFile: "3_socket_connect.c",
           contentPath: "chapter-2/socket-and-connect",
@@ -114,18 +114,18 @@ export const CONTENT_METADATA: ContentMetadata = {
     {
       number: 3,
       slug: "chapter-3",
-      title: "Kernel probes",
+      title: "内核探针",
       exercises: [
         {
           slug: "tcp-connect",
-          title: "Introduction",
+          title: "简介",
           exerciseId: "tcp-connect",
           codeFile: "0_tcp_connect.c",
           contentPath: "chapter-3/tcp-connect",
         },
         {
           slug: "read-http-password",
-          title: "Reading TCP packets",
+          title: "读取 TCP 报文",
           exerciseId: "read-http-password",
           codeFile: "2_tcp.c",
           contentPath: "chapter-3/read-http-password",

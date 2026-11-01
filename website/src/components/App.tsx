@@ -46,7 +46,7 @@ export default function App({
   };
 
   const [code, setCode] = useState(getInitialCode);
-  const [output, setOutput] = useState("Initializing WASM...");
+  const [output, setOutput] = useState("正在初始化 WASM…");
   const [outputClass, setOutputClass] = useState<"warning" | "error" | "">("");
   const [typeInfo, setTypeInfo] = useState<{ [name: string]: TypeInfo }>({});
   const [selectedStructName, setSelectedStructName] = useState<string | null>(
@@ -103,13 +103,13 @@ export default function App({
 
         if (errors.length > 0) {
           errors.forEach((err) => {
-            const errorType = err.isWarning ? "Warning" : "Error";
+            const errorType = err.isWarning ? "警告" : "错误";
             if (err.filename === "<string>") {
-              compilationOutputRef.current += `${errorType} at line ${err.lineNum}: ${err.msg}\n`;
+              compilationOutputRef.current += `${errorType}（第 ${err.lineNum} 行）：${err.msg}\n`;
             } else {
-              compilationOutputRef.current += `${errorType} at ${
-                err.filename || "<unknown>"
-              }:${err.lineNum}: ${err.msg}\n`;
+              compilationOutputRef.current += `${errorType}（${
+                err.filename || "<未知文件>"
+              } 第 ${err.lineNum} 行）：${err.msg}\n`;
             }
           });
         }
@@ -128,7 +128,7 @@ export default function App({
         setOutputClass(newOutputClass);
       },
       (error) => {
-        compilationOutputRef.current += "Worker Error: " + error + "\n";
+        compilationOutputRef.current += "Worker 错误：" + error + "\n";
         setOutput(compilationOutputRef.current);
         setOutputClass("error");
       }
@@ -310,7 +310,7 @@ export default function App({
                   onClick={() =>
                     handleCompileAsYouTypeChange(!compileAsYouType)
                   }
-                  title="Type-check as you type"
+                  title="输入时实时类型检查"
                 >
                   <Braces size={18} />
                 </ControlButton>
@@ -324,13 +324,13 @@ export default function App({
                       String(newValue)
                     );
                   }}
-                  title="Vim mode"
+                  title="Vim 模式"
                 >
                   <Keyboard size={18} />
                 </ControlButton>
                 <ControlButton
                   onClick={() => setShowResetConfirm(true)}
-                  title="Reset code to defaults"
+                  title="重置为初始代码"
                 >
                   <RotateCcw size={18} />
                 </ControlButton>
@@ -345,18 +345,18 @@ export default function App({
               <noscript>
                 <div className="noscript-content">
                   <p>
-                    The interactive code editor requires JavaScript to function.
+                    交互式代码编辑器需要 JavaScript 才能工作。
                   </p>
-                  <p>You can use your own editor locally if you prefer.</p>
+                  <p>你也可以在本地用自己惯用的编辑器写。</p>
                   {codeFile && chapterId !== undefined && (
                     <p>
-                      Source file:{" "}
+                      源文件：{" "}
                       <a href={`/exercises-code/${chapterId}/${codeFile}`}>
                         {codeFile}
                       </a>
                     </p>
                   )}
-                  <p>The API is:</p>
+                  <p>接口定义如下：</p>
                   <pre>
                     {`POST /run_code/${exerciseId}
   - Body: your code`}
@@ -400,7 +400,7 @@ export default function App({
             />
           ) : (
             <div className={styles.emptyEventsPane}>
-              Run your code to see execution events here
+              运行代码后，执行事件会显示在这里
             </div>
           )}
         </Panel>
@@ -408,17 +408,16 @@ export default function App({
       {showResetConfirm && (
         <div className={styles.confirmDialog}>
           <div className={styles.confirmDialogContent}>
-            <h3>Reset Code to Defaults?</h3>
+            <h3>重置为初始代码？</h3>
             <p>
-              This will clear your changes and restore the original starter
-              code.
+              这会清除你的修改，恢复为最初的起始代码。
             </p>
             <div className={styles.confirmButtons}>
               <button
                 className={styles.cancelButton}
                 onClick={() => setShowResetConfirm(false)}
               >
-                Cancel
+                取消
               </button>
               <button
                 className={styles.confirmButton}
@@ -427,7 +426,7 @@ export default function App({
                   setShowResetConfirm(false);
                 }}
               >
-                Reset
+                重置
               </button>
             </div>
           </div>

@@ -1,16 +1,16 @@
-So far, each exercise has used a single eBPF program. But what if we need to correlate information across different events?
+到目前为止，每个练习都只用了单个 eBPF 程序。但如果我们需要把不同事件中的信息关联起来呢？
 
-For example: When a process **starts**, we know its name. When it **exits**, we know its exit code. What if we want to know the **name** of processes that exit with a specific code?
+举例来说：当一个进程**启动**时，我们知道它的名字；当它**退出**时，我们知道它的退出码。如果想查出以某个特定退出码退出的进程的**名字**，该怎么办？
 
-## Multiple eBPF programs
+## 多个 eBPF 程序
 
-You can define **multiple programs in one file**, each hooking into different events.
+你可以在**一个文件里定义多个程序**，每个程序挂载到不同的事件上。
 
-Each program is independent and runs when its own event triggers.
+每个程序相互独立，在各自的事件触发时运行。
 
-A common case that requires multiple programs is the `entry`+`exit` event pair.
+最常见的需要多个程序的场景，就是 `entry`+`exit` 这样成对的事件。
 
-At **entry**, we have the input (arguments, process info).
+在 **entry** 处，我们拿到的是输入（参数、进程信息）。
 
 ```c
 SEC("tracepoint/sched/sched_process_exec")
@@ -19,7 +19,7 @@ int on_process_start(struct trace_event_raw_sched_process_exec *ctx) {
 }
 ```
 
-At **exit**, we have the output (return values, exit codes).
+在 **exit** 处，我们拿到的是输出（返回值、退出码）。
 
 ```c
 SEC("tracepoint/syscalls/sys_enter_exit")
@@ -29,15 +29,15 @@ int on_process_exit(struct trace_event_raw_sys_enter *ctx) {
 }
 ```
 
-To correlate both events, we need to persist data between program invocations.
+要关联这两个事件，我们需要在两次程序调用之间把数据保存下来。
 
-## Persisting state
+## 保存状态
 
-**Maps** are data structures that persist between eBPF program invocations.
+**Map** 是一种在 eBPF 程序多次调用之间持续存在的数据结构。
 
-In eBPF, there are [many kinds](https://docs.ebpf.io/linux/map-type/) of maps. For this exercise, we'll use hash maps (key-value store).
+eBPF 里有[很多种](https://docs.ebpf.io/linux/map-type/) map。这个练习里我们使用哈希 map（键值存储）。
 
-Map usage is straightforward. First, declare a struct with these `__uint`/`__type` macros.
+map 的用法很直接。首先用这些 `__uint`/`__type` 宏声明一个结构体。
 
 ```c
 struct {
@@ -48,14 +48,14 @@ struct {
 } my_map SEC(".maps");
 ```
 
-To store, you pass a pointer to the data, which will be copied:
+存数据时，你传入一个指向数据的指针，数据会被拷贝进去：
 ```c
 u64 key = 12345;
 char value[16] = "hello";
 bpf_map_update_elem(&my_map, &key, value, BPF_ANY);
 ```
 
-To retrieve a pointer to the value:
+要取回指向值的指针：
 ```c
 char *stored = bpf_map_lookup_elem(&my_map, &key);
 if (!stored) { // Key not found
@@ -64,20 +64,20 @@ if (!stored) { // Key not found
 // Use `stored` (it's a pointer to the char[16] array)
 ```
 
-To delete an entry from the map:
+从 map 中删除一个条目：
 ```c
 bpf_map_delete_elem(&my_map, &key);
 ```
 
-## The challenge
+## 挑战
 
-A program named `exit_with_code` will run and exit. Submit its exit code using `SUBMIT_NUM(code)`.
+有个名为 `exit_with_code` 的程序会运行然后退出。用 `SUBMIT_NUM(code)` 提交它的退出码。
 
-The starter code has most of the logic already, this is an introduction chapter after all.
+起始代码里已经写好了大部分逻辑，毕竟这是入门章节。
 
-## Your task
+## 你的任务
 
-Check if the process name matches `"exit_with_code"`, and if so, submit the exit code.
+检查进程名是否匹配 `"exit_with_code"`，如果匹配就提交退出码。
 
 
 import QuickReference from '../../../components/QuickReference.tsx';

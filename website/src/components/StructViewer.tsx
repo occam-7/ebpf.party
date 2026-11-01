@@ -59,7 +59,7 @@ export default function StructViewer({ typeInfo, onClose }: StructViewerProps) {
   return (
     <div className={styles.structViewer}>
       <div className={styles.header}>
-        <h3>Type Information</h3>
+        <h3>类型信息</h3>
         <button className={styles.closeButton} onClick={onClose}>
           <X></X>
         </button>

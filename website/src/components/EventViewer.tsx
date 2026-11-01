@@ -42,36 +42,36 @@ export default function EventViewer({
       return event.data;
     }
     if (event.type === "requestError") {
-      return `Request Error: ${event.data}`;
+      return `请求错误：${event.data}`;
     }
     if (event.type === "correctAnswer") {
-      return "Correct Answer!";
+      return "答案正确！";
     }
     if (event.type === "wrongAnswer") {
-      return "Wrong Answer";
+      return "答案错误";
     }
     if (event.type === "multipleAnswers") {
-      return "Multiple Answers Detected";
+      return "检测到多个答案";
     }
     if (event.type === "noAnswer") {
-      return "You didn't submit an answer. Use SUBMIT_STR or SUBMIT_NUM to do it.";
+      return "你没有提交答案。用 SUBMIT_STR 或 SUBMIT_NUM 提交。";
     }
     if (event.type === "guestMessage") {
       if (event.data.type === "debugMapNotFound") {
-        return "Error: No perf maps found in program";
+        return "错误：程序里没有 perf map";
       }
       if (event.data.type === "noProgramsFound") {
-        return "Error: No eBPF programs found in code. Missing a SEC() decorator?";
+        return "错误：代码里没有 eBPF 程序，是不是漏了 SEC() 声明？";
       }
       if (event.data.type === "cantAttachProgram") {
         const { section, kind } = event.data.data;
         if (kind === "noSuchHook") {
-          return `Could not attach to \`${section}\`, check the hook name for a typo.`;
+          return `无法挂载到 \`${section}\`，检查一下挂载点名字有没有拼错。`;
         }
         if (kind === "denied") {
-          return `The kernel rejected the program for hook \`${section}\`. Usually this is an over-read of ctx.`;
+          return `内核拒绝了挂载到 \`${section}\` 的程序，通常是读 ctx 时越界了。`;
         }
-        return `Could not attach to \`${section}\`.`;
+        return `无法挂载到 \`${section}\`。`;
       }
       if (event.data.type === "verifierFail") {
         return event.data.data;
@@ -93,8 +93,8 @@ export default function EventViewer({
     <div className={styles.eventViewer}>
       <div className={styles.header}>
         <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-          <h3>Execution Events</h3>
-          {isRunning && <span className={styles.loading}>Loading...</span>}
+          <h3>执行事件</h3>
+          {isRunning && <span className={styles.loading}>加载中…</span>}
         </div>
         <button className={styles.closeButton} onClick={onClear}>
           <X></X>

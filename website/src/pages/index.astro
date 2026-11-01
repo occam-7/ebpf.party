@@ -4,12 +4,11 @@ import { CONTENT_METADATA } from "../lib/exercises-metadata";
 import ExerciseList from "../components/ExerciseList";
 ---
 
-<Layout title="Home">
+<Layout title="首页">
   <div class="home">
     <div class="content">
       <p>
-        Learn eBPF through hands-on exercises. Write, compile, and run programs
-        directly from your browser.
+        通过动手练习学 eBPF：在浏览器里直接编写、编译并运行程序。
       </p>
 
       <ExerciseList client:load metadata={CONTENT_METADATA} />
@@ -17,15 +16,13 @@ import ExerciseList from "../components/ExerciseList";
     <div class="footer">
       <hr />
       <p>
-        Did you find an issue, or have an idea for a new exercise? Create an
-        issue in <a href="https://github.com/DavidVentura/ebpf.party"
-          >the repository</a
-        >.
+        发现问题，或者有新练习的点子？到 <a href="https://github.com/occam-7/ebpf.party"
+          >仓库</a
+        >里开一个 issue。
       </p>
       <p>
-        Curious about how it works? <a href="/how-it-works"
-          >Here's an explanation.</a
-        >
+        想知道它怎么运作？<a href="/how-it-works">这里有说明。</a> 本页是
+        <a href="https://ebpf.party">ebpf.party</a> 的中文版，译文问题以英文原版为准。
       </p>
     </div>
   </div>

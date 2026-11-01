@@ -144,7 +144,7 @@ function ParsedFieldComponent({
     if (field.type == "in_addr") {
       const s_addr_field = field.value.fields.find((f) => f.name === "s_addr");
       if (!s_addr_field || s_addr_field.value.kind !== "scalar") {
-        return <div className={styles.field}>Invalid in_addr structure</div>;
+        return <div className={styles.field}>in_addr 结构无效</div>;
       }
 
       const value = s_addr_field.value.value;
@@ -270,7 +270,7 @@ export default function ParsedEventViewer({
     return (
       <div className={styles.parsedEvent}>
         <div className={styles.eventHeader}>
-          <span className={styles.eventError}>Parse Error</span>
+          <span className={styles.eventError}>解析错误</span>
         </div>
         <div className={styles.errorMessage}>
           Data too short: expected at least 2 bytes for type prefix, got{" "}
@@ -289,7 +289,7 @@ export default function ParsedEventViewer({
     return (
       <div className={styles.parsedEvent}>
         <div className={styles.eventHeader}>
-          <span className={styles.eventError}>Parse Error</span>
+          <span className={styles.eventError}>解析错误</span>
         </div>
         <div className={styles.errorMessage}>
           Unknown counter: {counter} (not found in debug type registry)
@@ -307,7 +307,7 @@ export default function ParsedEventViewer({
       return (
         <div className={styles.parsedEvent}>
           <div className={styles.eventHeader}>
-            <span className={styles.eventError}>Parse Error</span>
+            <span className={styles.eventError}>解析错误</span>
           </div>
           <div className={styles.errorMessage}>
             Scalar type requires 3-byte header, got {data.length} bytes
@@ -451,7 +451,7 @@ export default function ParsedEventViewer({
     return (
       <div className={styles.parsedEvent}>
         <div className={styles.eventHeader}>
-          <span className={styles.eventError}>Parse Error</span>
+          <span className={styles.eventError}>解析错误</span>
         </div>
         <div className={styles.errorMessage}>
           Type '{typeName}' not found in type registry
@@ -467,7 +467,7 @@ export default function ParsedEventViewer({
       <div className={styles.parsedEvent}>
         <div className={styles.eventHeader}>
           <span className={styles.eventType}>{label}</span>
-          <span className={styles.eventError}>Parse Error</span>
+          <span className={styles.eventError}>解析错误</span>
         </div>
         <div className={styles.errorMessage}>{parseResult.error}</div>
       </div>

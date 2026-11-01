@@ -2,35 +2,35 @@ import Braces from "@lucide/astro/icons/braces";
 import ControlButton from "../../../components/ControlButton.tsx"
 import Keyboard from "lucide-react/dist/esm/icons/keyboard";
 
-This platform provides a configured environment and exercises to help you learn eBPF.
+这个平台提供了一个配置好的环境和一系列练习，帮助你学习 eBPF。
 
-The editor compiles your code locally as you type, but you can disable this by clicking the <ControlButton style={{display: "inline"}}><Braces size={14} /></ControlButton> button. Compilation errors are highlighted inline.
+编辑器会在你输入时于本地编译代码，你可以点击 <ControlButton style={{display: "inline"}}><Braces size={14} /></ControlButton> 按钮来关闭该功能。编译错误会在行内高亮显示。
 
-Try typing into the editor and see how it reacts, then click 'Run' to execute your code on the server.
+试着在编辑器里打点字，看看它的反应，然后点击「运行」在服务器上执行你的代码。
 
-If you prefer 'vim mode', the  <ControlButton style={{display: "inline"}}><Keyboard size={14} /></ControlButton> button will toggle it.
+如果你偏好 “vim 模式”，<ControlButton style={{display: "inline"}}><Keyboard size={14} /></ControlButton> 按钮可以切换。
 
-## Hotkeys
+## 快捷键
 
-- <kbd>Ctrl</kbd>+<kbd>Enter</kbd> runs the code.
-- <kbd>Ctrl</kbd>+<kbd>Click</kbd> on type definitions (`my_struct`, `trace_event_raw_sched_process_exec`) shows a type definition popup
+- <kbd>Ctrl</kbd>+<kbd>Enter</kbd> 运行代码。
+- 在类型定义（`my_struct`、`trace_event_raw_sched_process_exec`）上 <kbd>Ctrl</kbd>+<kbd>Click</kbd> 会弹出类型定义窗口
 
-## Debugging utilities
+## 调试工具
 
-There are multiple `DEBUG_` macros to display data from your programs.
-Each macro takes a label (a string constant) as its first argument.
+有多组 `DEBUG_` 宏可以用来显示程序中的数据。
+每个宏的第一个参数都是一个标签（字符串常量）。
 
-- `DEBUG_NUM(label, num)` can take any number, like `u32` or `ssize_t`
-- `DEBUG_STR(label, buf)` requires a fixed-size buf, like `char[64]`
-- `DEBUG_STR_LEN(label, ptr, len)` can take any pointer, will debug `len` bytes
-- `DEBUG_STRUCT(label, struct)` can take any struct _by value_
+- `DEBUG_NUM(label, num)` 可以接受任意数字，例如 `u32` 或 `ssize_t`
+- `DEBUG_STR(label, buf)` 要求是固定大小的 buf，例如 `char[64]`
+- `DEBUG_STR_LEN(label, ptr, len)` 可以接受任意指针，会调试 `len` 个字节
+- `DEBUG_STRUCT(label, struct)` 可以接受任意 struct，_按值_ 传入
 
-## Submitting answers
+## 提交答案
 
-To solve the exercises, you will need to submit answers directly from your code, using `SUBMIT_NUM(answer)`, `SUBMIT_STR(answer)` or `SUBMIT_STR_LEN(answer, len)`.
+要完成练习，你需要直接在代码中提交答案，使用 `SUBMIT_NUM(answer)`、`SUBMIT_STR(answer)` 或 `SUBMIT_STR_LEN(answer, len)`。
 
-Your eBPF program triggers on multiple events, so you'll need to guard your `SUBMIT_X` calls, as multiple submissions invalidate all answers.
+你的 eBPF 程序会在多个事件上触发，因此需要为 `SUBMIT_X` 调用加上条件判断，因为多次提交会让所有答案作废。
 
-When using `SUBMIT_STR`, trailing null bytes are trimmed, but trailing garbage is not. Use the `SUBMIT_STR_LEN` variant when you can't guarantee null termination. 
+使用 `SUBMIT_STR` 时，末尾的 null 字节会被去掉，但末尾的无用数据不会。当你无法保证以 null 结尾时，请改用 `SUBMIT_STR_LEN` 变体。
 
-Solve this exercise by uncommenting `SUBMIT_STR("the answer");`
+取消注释 `SUBMIT_STR("the answer");` 即可完成这个练习。

@@ -1,19 +1,19 @@
-We've read file contents from syscall buffers. Now let's read network data - specifically DNS responses to extract IP addresses.
+我们已经从系统调用缓冲区里读过文件内容了。现在我们来读网络数据 —— 具体地说，是 DNS 响应，从中提取 IP 地址。
 
-## The recvfrom syscall
+## recvfrom 系统调用
 
-DNS clients use `recvfrom()` to receive UDP responses:
+DNS 客户端用 `recvfrom()` 接收 UDP 响应：
 
 ```c
 ssize_t recvfrom(int sockfd, void *buf, size_t len, int flags,
                  struct sockaddr *src_addr, socklen_t *addrlen);
 ```
 
-Like `read()`, we need entry/exit correlation:
-- At **entry**: Buffer is empty, but we have the pointer at `ctx->args[1]`
-- At **exit**: Buffer is filled with DNS response, `ctx->ret` = bytes received
+和 `read()` 一样，我们需要把进入和退出关联起来：
+- 在 **entry** 时：缓冲区还是空的，但我们可以从 `ctx->args[1]` 拿到指针
+- 在 **exit** 时：缓冲区里已经填好了 DNS 响应，`ctx->ret` = 收到的字节数
 
-## DNS packet structure
+## DNS 报文结构
 
 ```c
 struct dns_header {
@@ -26,13 +26,13 @@ struct dns_header {
 };
 ```
 
-After the header: **Question section** (domain name) → **Answer section** (IP address).
+头部之后是：**Question section**（域名）→ **Answer section**（IP 地址）。
 
-### Domain name encoding
+### 域名的编码方式
 
-DNS encodes domains as length-prefixed labels: `\x04ebpf\x05party\x00` for "ebpf.party".
+DNS 把域名编码成带长度前缀的 label：`\x04ebpf\x05party\x00` 表示 "ebpf.party"。
 
-To parse:
+解析方法：
 ```c
 int pos = sizeof(struct dns_header);
 char domain[64];
@@ -53,9 +53,9 @@ for (int i = 0; i < 10; i++) {  // Max 10 labels
 }
 ```
 
-### Answer section structure
+### Answer section 的结构
 
-After question (domain + QTYPE + QCLASS), the answer contains:
+在 question（域名 + QTYPE + QCLASS）之后，answer 里包含：
 
 ```c
 // NAME (variable, often a pointer)
@@ -66,12 +66,12 @@ After question (domain + QTYPE + QCLASS), the answer contains:
 // RDATA (4 bytes) - the IP address
 ```
 
-For A records, RDATA is the IPv4 address in network byte order.
+对于 A 记录，RDATA 就是网络字节序的 IPv4 地址。
 
-## The challenge
+## 挑战
 
-A program makes DNS queries. Find the response for "ebpf.party" and submit its IP address.
+某个程序会发起 DNS 查询。找到 "ebpf.party" 的响应，提交它的 IP 地址。
 
-At `recvfrom` entry, store the buffer pointer. At exit, read the DNS response, parse the domain name from the question section, check if it matches "ebpf.party" with `bpf_strncmp()`, then extract and submit the IPv4 address from the answer section.
+在 `recvfrom` 的 entry 处保存缓冲区指针。在 exit 处读取 DNS 响应，从 question section 解析出域名，用 `bpf_strncmp()` 检查它是否匹配 "ebpf.party"，然后从 answer section 提取 IPv4 地址并提交。
 
-The IP address is 4 bytes in network byte order. Convert it to a `u32` with `bpf_ntohl()` and submit with `SUBMIT_NUM()`.
+IP 地址是网络字节序的 4 个字节。要得到一个 `u32`，可以用 `bpf_ntohl()` 转换，再用 `SUBMIT_NUM()` 提交。

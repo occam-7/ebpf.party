@@ -1,29 +1,29 @@
-Like `open()` and `read()`, network connections have both an attempt (entry) and a result (exit). To correlate these events, we store data at entry and retrieve it at exit.
+和 `open()`、`read()` 一样，网络连接也有发起（entry）和结果（exit）两个阶段。要关联这两个事件，我们在 entry 存数据，在 exit 取回来。
 
-## The connect syscall
+## connect 系统调用
 
 ```c
 int connect(int sockfd, const struct sockaddr *addr, socklen_t addrlen);
 ```
 
-At **entry** (`sys_enter_connect`):
-- `ctx->args[0]` = socket file descriptor
-- `ctx->args[1]` = pointer to `sockaddr` structure (user space)
+在 **entry**（`sys_enter_connect`）处：
+- `ctx->args[0]` = socket 文件描述符
+- `ctx->args[1]` = 指向 `sockaddr` 结构体的指针（用户空间）
 
-At **exit** (`sys_exit_connect`):
-- `ctx->ret == 0` → Connection succeeded
-- `ctx->ret < 0` → Connection failed (errno value)
+在 **exit**（`sys_exit_connect`）处：
+- `ctx->ret == 0` → 连接成功
+- `ctx->ret < 0` → 连接失败（errno 值）
 
-## Reading the sockaddr structure
+## 读取 sockaddr 结构体
 
-The `addr` pointer at `ctx->args[1]` points to user space memory. You must use `bpf_probe_read_user()` to safely copy it:
+`addr` 指针（位于 `ctx->args[1]`）指向用户空间内存。必须用 `bpf_probe_read_user()` 才能安全地拷贝它：
 
 ```c
 struct sockaddr_in addr;
 bpf_probe_read_user(&addr, sizeof(addr), (void *)ctx->args[1]);
 ```
 
-For IPv4 connections (`sin_family == 2`):
+对于 IPv4 连接（`sin_family == 2`）：
 
 ```c
 struct sockaddr_in {
@@ -34,21 +34,21 @@ struct sockaddr_in {
 };
 ```
 
-Port and IP are in **network byte order** ([big-endian](https://en.wikipedia.org/wiki/Endianness)). Convert to host order with the helper:
+端口和 IP 采用**网络字节序**（[大端](https://en.wikipedia.org/wiki/Endianness)）。用辅助函数转换成本机字节序：
 
 ```c
 u16 port = bpf_ntohs(addr.sin_port);
 ```
 
-## The challenge
+## 挑战
 
-A program attempts to connect to multiple ports. Most connections fail, but one succeeds. **Submit the port of the connection that succeeds.**
+有个程序会尝试连接多个端口。大部分连接都失败，只有一个成功。**提交连接成功的那个端口。**
 
-### Your task:
-1. At `connect` entry: Read the `sockaddr_in` structure and store the port in a temporary map
-2. At `connect` exit: Check if the connection succeeded (`ret == 0`), then submit the port
+### 你的任务：
+1. 在 `connect` entry：读取 `sockaddr_in` 结构体，把端口存进一个临时 map
+2. 在 `connect` exit：检查连接是否成功（`ret == 0`），然后提交端口
 
-The starter code has the structure you need to follow.
+起始代码里已有你照着写就可以的结构。
 
 
 

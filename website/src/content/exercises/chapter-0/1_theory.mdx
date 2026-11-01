@@ -1,58 +1,58 @@
-eBPF is a Linux mechanism that allows you to hook custom code directly into kernel events.
+eBPF 是 Linux 中的一种机制，允许你把自定义代码直接挂载到内核事件上。
 
-When an event triggers, the kernel pauses its normal execution, runs your eBPF program, and then continues. This happens at the kernel level, giving you visibility into system behavior that would be impossible from user space alone.
+当某个事件被触发时，内核会暂停正常的执行流程，运行你的 eBPF 程序，然后再继续。这一切都发生在内核层面，让你能够观察到单靠用户空间根本无法看到的系统行为。
 
-Examples of events you can hook:
-- A process opens a file
-- A program is executed
-- A network packet arrives
+可以挂载的事件示例：
+- 某个进程打开文件
+- 某个程序被执行
+- 某个网络数据包到达
 
-This makes eBPF powerful for observability, security monitoring, and network filtering without modifying the kernel itself or loading kernel modules.
+这让 eBPF 在可观测性、安全监控和网络过滤方面非常强大，而且既不需要修改内核本身，也不需要加载内核模块。
 
-## Program types
+## 程序类型
 
-eBPF programs are categorized by where they attach in the kernel. These are the most common:
+eBPF 程序按其在内核中挂载的位置分类。下面是最常见的几种：
 
-### Tracepoints
+### Tracepoint 挂载点
 
-Tracepoints are hook points defined throughout the kernel code. They expose almost all kernel events, such as process scheduling, file operations, network operations and system calls.
+tracepoint 是内核代码中预先定义好的挂载点。它们几乎暴露了内核的所有事件，例如进程调度、文件操作、网络操作以及系统调用。
 
-### Kprobes
+### Kprobe
 
-Kprobes attach to any kernel function by name. Unlike tracepoints, they're not part of the kernel's stable API - function names and signatures can change between versions.
+kprobe 可以通过函数名挂载到任意内核函数上。与 tracepoint 不同，它们不属于内核的稳定 API —— 函数名和签名可能在不同版本之间发生变化。
 
-Kprobes provide access to kernel internals that aren't exposed through tracepoints, allowing deeper inspection of kernel behavior.
+kprobe 能访问 tracepoint 没有暴露出来的内核内部细节，从而可以更深入地检查内核行为。
 
 ### XDP
 
-XDP programs attach at the network driver level, processing packets before they reach the kernel's network stack.
+XDP 程序挂载在网络驱动层，在数据包进入内核网络协议栈之前就对其做处理。
 
-XDP programs run so early that they can drop or redirect packets with minimal overhead.
+XDP 程序运行得非常早，因此能以极小的开销丢弃或重定向数据包。
 
-## The verifier
+## 验证器
 
-If you could run arbitrary code in the kernel, you could crash the system, leak sensitive data, or create infinite loops that hang the machine.
+如果你能在内核里运行任意代码，就可能把系统搞崩、泄露敏感数据，或者写出让机器卡死的死循环。
 
-The eBPF verifier prevents this by analyzing your program before it runs and enforcing strict safety rules.
+eBPF 验证器通过在程序运行前分析它、并强制执行严格的安全规则来避免这些情况。
 
-As you work through the exercises, you'll encounter verifier errors. While these errors can be cryptic, they always point to something the verifier couldn't prove was safe. Learning to read these errors is part of learning eBPF.
-
-
-### Guarantee of termination
-
-Programs must be guaranteed to terminate. To enforce this, the verifier imposes limits:
-
-- Programs have a maximum complexity (counted as "instructions processed" by the verifier)
-- Loops must have a fixed upper bound that the verifier can verify at load time
-- To prevent infinite recursion, helper functions can't call back into your program
+在你做练习的过程中，会遇到验证器报错。这些错误虽然可能晦涩难懂，但它们总是指向验证器无法证明其安全性的某处。学会读懂这些错误，本身就是学习 eBPF 的一部分。
 
 
-### Memory safety
+### 保证终止
 
-All memory access must be safe:
-- You can't do pointer arithmetic or dereference arbitrary addresses
-- Reading kernel or user memory requires special helpers (`bpf_probe_read_kernel`, `bpf_probe_read_user`)
-- Array access must be bounds-checked before use
-- Pointers from map lookups must be checked for NULL
+程序必须保证会终止。为此，验证器施加了若干限制：
 
-The verifier analyzes all branches in your code and will reject programs where _any_ branch path can't be proven safe.
+- 程序有最大复杂度限制（按验证器「已处理指令数」计算）
+- 循环必须有固定的上界，且验证器能在加载时验证出来
+- 为防止无限递归，辅助函数不能回调你的程序
+
+
+### 内存安全
+
+所有内存访问都必须是安全的：
+- 你不能做指针运算，也不能解引用任意地址
+- 读取内核内存或用户内存需要专门的辅助函数（`bpf_probe_read_kernel`、`bpf_probe_read_user`）
+- 数组访问在使用前必须做边界检查
+- 从 map 查询得到的指针必须做 NULL 检查
+
+验证器会分析代码中的所有分支，只要 _任何_ 一条分支路径无法被证明安全，程序就会被拒绝。

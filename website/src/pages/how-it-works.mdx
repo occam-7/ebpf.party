@@ -1,32 +1,31 @@
 ---
 layout: ../layouts/ContentLayout.astro
-title: How this platform works
+title: 这个平台是怎么运作的
 ---
 
-As you write code, [TCC (Tiny C Compiler)](https://bellard.org/tcc/) runs in your browser via WASM to provide instant typechecking without server roundtrips.
+你写代码的时候，[TCC（Tiny C Compiler）](https://bellard.org/tcc/) 通过 WASM 在浏览器里跑，实时做类型检查，不需要往返服务器。
 
-When you you click `Run` your code is saved in local storage and sent to the backend.
+点「运行」之后，代码会先存进 localStorage，再发送给后端。
 
-The backend will compile your code to a BPF object using `clang` and spin up a fresh VM to execute it..
+后端用 `clang` 把你的代码编译成 BPF 对象，然后拉起一台全新的虚拟机去执行它。
 
+## 虚拟机
 
-## The VM
+每次提交都会得到一台一次性的虚拟机，配置是：
 
-Each submission gets an ephemeral VM with:
+  - 0.5 vCPU、64MB 内存
+  - 内核 6.18.2（最新 LTS）
+  - 完全断网
+  - 500ms 自毁定时器
 
-  - 0.5vCPU, 64MB RAM
-  - Kernel 6.18.2 (latest LTS)
-  - No network
-  - A 500ms self-destruct timer
+启动时间 40~50ms，靠的是 [Firecracker](https://github.com/firecracker-microvm/firecracker)（外加一些非常规补丁）和一个极简内核。
 
-Boot time is 40~50ms thanks to [Firecracker](https://github.com/firecracker-microvm/firecracker) (with some unholy patches), and a very minimal kernel.
+虚拟机启动后进入一个[自定义的 `/init`](https://github.com/DavidVentura/ebpf.party/blob/master/userspace/src/main.rs) 进程，它只做最基本的初始化（挂载 `/sys`、起 loopback 接口……），加载你的 BPF 对象，然后开始流式输出事件。
 
-The VM boots into a [custom `/init`](https://github.com/DavidVentura/ebpf.party/blob/master/userspace/src/main.rs) process, that does the bare minimum setup (mount `/sys`, set up a loopback interface, ...), loads your BPF object and starts streaming events.
+## 事件怎么从虚拟机里出来
 
-## Getting events out of the vm
+你的代码必须 `#include` [`ep_platform.h`](https://github.com/DavidVentura/ebpf.party/blob/master/backend/includes/ep_platform.h)，它负责建一个用于所有输出的 BPF ringbuf map。
 
-Your code must `#include` [`ep_platform.h`](https://github.com/DavidVentura/ebpf.party/blob/master/backend/includes/ep_platform.h), which creates a BPF ringbuf map for all output.
+`DEBUG_` 和 `SUBMIT_` 宏把事件写进这个 map。
 
-The `DEBUG_` and `SUBMIT_` macros write events to this map.
-
-Inside the VM, the init process polls this ringbuf and forwards events to the host via [vsock](https://man7.org/linux/man-pages/man7/vsock.7.html). The backend streams these events via SSE your browser.
+虚拟机内部，init 进程轮询这个 ringbuf，通过 [vsock](https://man7.org/linux/man-pages/man7/vsock.7.html) 把事件转发给宿主机。后端再用 SSE 把这些事件流式推给浏览器。

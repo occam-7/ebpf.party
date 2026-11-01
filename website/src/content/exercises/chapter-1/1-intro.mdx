@@ -1,66 +1,66 @@
-When an eBPF program runs, it's executed in **kernel space**, but with access to information about the
-process that triggered the event.
+当 eBPF 程序运行时，它执行在 **内核空间**，但能够访问触发该事件的
+进程的相关信息。
 
-For example, if `bash` triggers an event, your eBPF program can query details about that `bash` 
-process context: its name, process ID, and more.
+例如，如果是 `bash` 触发了某个事件，你的 eBPF 程序就可以查询这个 `bash`
+进程上下文的细节：它的名字、进程 ID，等等。
 
-The kernel defines a [large set of helper functions](https://docs.ebpf.io/linux/helper-function/)
-to retrieve this information about the triggering process.
+内核定义了一[大批辅助函数](https://docs.ebpf.io/linux/helper-function/)，
+用来获取触发进程的这些信息。
 
-## The challenge
+## 挑战
 
-We want to extract the name of every program that executes in the system.
+我们想提取系统中每一个被执行程序的名字。
 
-To do this, we need to attach our code to an event that fires whenever a program executes.
-This event is called `sched_process_exec`.
+要做到这一点，我们需要把代码挂载到一个「只要有程序执行就会触发」的事件上。
+这个事件叫 `sched_process_exec`。
 
-In the preloaded snippet, you will see a specific "section" definition just above our function:
+在预加载的代码片段中，你会看到我们函数的上方有一行特定的 section 定义：
 
 ```c
 SEC("tp/sched/sched_process_exec")
 ```
-This macro tells the eBPF loader to attach the function to that specific tracepoint.
-Now, whenever the scheduler runs a new process, our code runs too!
+这个宏告诉 eBPF 加载器把这个函数挂载到那个特定的 tracepoint 挂载点上。
+这样，每当调度器运行一个新进程，我们的代码也会跟着运行！
 
 
-**Try running the preloaded snippet now.** It should log an entry per event.
+**现在试着运行一下预加载的代码片段。** 它应该会为每个事件打印一条记录。
 
-### Getting the program name
+### 获取程序名
 
-The example code works, but it prints a static string. We want the actual program name for every execution.
+示例代码能跑，但它打印的是一个静态字符串。我们想要的是每次执行时真正的程序名。
 
-Since our code has access to information about the new process, we can ask the kernel for the triggering process' name.
+由于我们的代码能访问新进程的信息，我们可以向内核询问触发进程的名字。
 
-We will use [bpf_get_current_comm(&buf, size)](https://docs.ebpf.io/linux/helper-function/bpf_get_current_comm/)
-which writes the current process name into a buffer you provide.
+我们将使用 [bpf_get_current_comm(&buf, size)](https://docs.ebpf.io/linux/helper-function/bpf_get_current_comm/)，
+它会把当前进程名写入你提供的缓冲区。
 
-In C, we can declare a character buffer with:
+在 C 里，可以这样声明一个字符缓冲区：
 ```c
 char buffer[16];
 ```
 
-To populate the buffer with the current process name, call the helper function:
+要把当前进程名填入缓冲区，调用这个辅助函数：
 
 ```c
 bpf_get_current_comm(&buffer, sizeof(buffer));
 ```
 
-Then call `DEBUG_STR` to see the results:
+然后调用 `DEBUG_STR` 查看结果：
 
 ```c
 DEBUG_STR("Command", buffer);
 ```
 
-**Try this now**. You'll see some normal programs like `ls`, and one that stands out.
+**现在就试试**。你会看到一些普通的程序，比如 `ls`，还有一个会格外扎眼。
 
-### Comparing strings
+### 比较字符串
 
-To filter out the unwanted entries, you'll need to compare strings.
+要过滤掉不需要的记录，你需要比较字符串。
 
-We'll use [bpf_strncmp(s1, s1_sz, s2)](https://docs.ebpf.io/linux/helper-function/bpf_strncmp/)
-which compares a variable string to a constant string.
+我们会用 [bpf_strncmp(s1, s1_sz, s2)](https://docs.ebpf.io/linux/helper-function/bpf_strncmp/)，
+它把一个可变字符串和一个常量字符串做比较。
 
-For example, to check if the buffer contains `"ls"`:
+例如，要检查缓冲区里是不是 `"ls"`：
 
 ```c
 if (bpf_strncmp(buffer, sizeof(buffer), "ls") == 0) {
@@ -68,8 +68,8 @@ if (bpf_strncmp(buffer, sizeof(buffer), "ls") == 0) {
 }
 ```
 
-It returns **0** when the strings **match**.
+当两个字符串**相同**时，它返回 **0**。
 
-### Your task
+### 你的任务
 
-Submit the name of the program that stands out, using `SUBMIT_STR(buffer)`.
+用 `SUBMIT_STR(buffer)` 提交那个扎眼的程序的名字。

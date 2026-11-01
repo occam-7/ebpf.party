@@ -1,72 +1,72 @@
-In the previous exercise, we learned how to use maps to share data between multiple eBPF programs.
+上一个练习里，我们学会了用 map 在多个 eBPF 程序之间共享数据。
 
-Now let's apply this to capturing data from syscall buffers. Syscalls have two tracepoint events: `enter` (before it starts) and `exit` (after it finishes). We'll need to correlate data between both.
+现在我们把这个方法用到从系统调用缓冲区中捕获数据上。系统调用有两个挂载点事件：`enter`（调用开始前）和 `exit`（调用结束后）。我们需要在两者之间关联数据。
 
-## The read syscall
+## read 系统调用
 
-Looking at the [read syscall](https://man7.org/linux/man-pages/man2/read.2.html):
+看一下 [read 系统调用](https://man7.org/linux/man-pages/man2/read.2.html)：
 
 ```c
 ssize_t read(int fd, void *buf, size_t count);
 ```
 
-If we hook into `sys_enter_read` and `sys_exit_read`:
+如果我们挂载到 `sys_enter_read` 和 `sys_exit_read` 上：
 
-- At **entry**: we have access to the arguments, but the buffer is still empty.
-- At **exit**: the buffer is filled with data, but we only have access to the return value.
+- 在 **entry**：可以访问到参数，但缓冲区还是空的。
+- 在 **exit**：缓冲区里已经有数据了，但我们只能访问到返回值。
 
-To correlate both, we capture the buffer pointer at entry using a map, then read the filled buffer at exit.
+为了把两者串起来，我们在 entry 处用 map 记下缓冲区指针，然后在 exit 处读取填好数据的缓冲区。
 
-## Storing the buffer address at entry
+## 在 entry 处保存缓冲区地址
 
-First, we need to save the buffer pointer when the syscall starts. The buffer address is in `ctx->args[1]`.
+首先，我们需要在系统调用开始时把缓冲区指针存下来。缓冲区地址在 `ctx->args[1]` 里。
 
-We'll store this address in a map, using the PID as the key so we can look it up later:
+我们把这个地址存进 map，用 PID 作 key，这样后面还能查回来：
 
 ```c
 u64 buf_addr = ctx->args[1];
 bpf_map_update_elem(&read_buffers, &pid, &buf_addr, BPF_ANY);
 ```
 
-Note that we're storing the address of the buffer as a `u64` value.
+注意，我们存的是缓冲区的地址，类型是 `u64`。
 
-## Reading the buffer at exit
+## 在 exit 处读取缓冲区
 
-Now in the exit program, we need to retrieve and read the buffer that was filled by the syscall.
+现在在 exit 程序里，我们要取出并读取被系统调用填好的缓冲区。
 
-First, check if the read succeeded:
+首先检查读取是否成功：
 
 ```c
 size_t count = ctx->ret;
 if (count <= 0) return 0;
 ```
-The return value `ctx->ret` tells you how many bytes were read.
+返回值 `ctx->ret` 告诉你读到了多少字节。
 
-Next, look up the saved buffer address using the PID as the key:
+接下来，用 PID 作 key 查出之前保存的缓冲区地址：
 ```c
 u64 *buf_ptr = bpf_map_lookup_elem(&read_buffers, &pid);
 if (!buf_ptr) return 0;
 ```
-This returns a pointer to the stored value (`u64*`).
+返回的是指向所存值的指针（`u64*`）。
 
-To read the buffer, create a local buffer and use `bpf_probe_read_user`. You'll need to dereference buf_ptr to get the actual buffer address:
+要读取缓冲区，先创建一个本地缓冲区，再用 `bpf_probe_read_user`。你需要解引用 buf_ptr 才能拿到真正的缓冲区地址：
 
 ```c
 char local_buf[32];
 if (count > 32) count = 32;
 bpf_probe_read_user(local_buf, count, (void *)*buf_ptr);
 ```
-Notice the `*buf_ptr` - we're dereferencing the pointer to get the buffer address we stored earlier.
+注意 `*buf_ptr` —— 这里解引用指针，取出我们之前保存的缓冲区地址。
 
 
-## The challenge
+## 挑战
 
-A program reads a file containing a password. Submit the contents of the entire file with `SUBMIT_STR_LEN`.
+有个程序会读取一个含密码的文件。用 `SUBMIT_STR_LEN` 提交整个文件的内容。
 
 
-### Your task
+### 你的任务
 
-Complete both the entry and exit programs to capture and submit the buffer contents.
+补全 entry 和 exit 两个程序，捕获并提交缓冲区的内容。
 
 import QuickReference from '../../../components/QuickReference.tsx';
 

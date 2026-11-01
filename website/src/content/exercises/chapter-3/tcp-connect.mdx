@@ -1,9 +1,9 @@
 
-We've used tracepoints to hook into syscalls. Now let's learn **kprobes** - attaching to internal kernel functions.
+我们已经用 tracepoint 挂载到系统调用上。现在来认识 **kprobes** —— 直接附加到内核内部函数上。
 
-## Kprobes vs tracepoints
+## kprobe 与 tracepoint 的对比
 
-**Tracepoints** are stable, documented hooks at specific kernel events (syscall entry/exit, scheduling, etc.). They provide structured context:
+**Tracepoints** 是内核特定事件处（系统调用进入/退出、调度等）稳定的、有文档记录的挂载点。它们提供结构化的上下文：
 ```c
 SEC("tracepoint/syscalls/sys_enter_connect")
 int trace(struct trace_event_raw_sys_enter *ctx) {
@@ -11,17 +11,17 @@ int trace(struct trace_event_raw_sys_enter *ctx) {
 }
 ```
 
-**Kprobes** attach to any kernel function by name.
+**Kprobes** 则按函数名附加到任意内核函数上。
 
-This mechanism is more flexible but kprobes are not part of the kernel's stable API, so they can change between kernel versions. On top of that, they do not provide a defined 'context', we need to get the argument types and order from the kernel sources.
+这种机制更灵活，但 kprobe 不属于内核的稳定 API，因此可能在不同内核版本之间发生变化。除此之外，它们也不提供预先定义好的「上下文」，我们需要从内核源码中确定参数的类型和顺序。
 
-## Why kprobes?
+## 为什么要用 kprobe？
 
-Tracepoints expose specific events. Kprobes let us hook deeper into kernel internals. For example, `connect()` syscall returns immediately for non-blocking sockets, but `tcp_finish_connect()` is called when the TCP handshake actually completes.
+tracepoint 只暴露特定的事件。kprobe 则让我们能更深入地挂到内核内部。例如，对于非阻塞 socket，`connect()` 系统调用会立即返回，但 TCP 握手真正完成时调用的是 `tcp_finish_connect()`。
 
-## Accessing function arguments
+## 访问函数参数
 
-Kprobes receive `struct pt_regs *ctx` - raw CPU registers. Use macros to extract the arguments:
+kprobe 收到的是 `struct pt_regs *ctx` —— 原始的 CPU 寄存器。用宏来提取参数：
 
 ```c
 PT_REGS_PARM1(ctx)  // First parameter
@@ -30,24 +30,23 @@ PT_REGS_PARM3(ctx)  // Third parameter
 // up to 8
 ```
 
-We can find the signature for `tcp_finish_connect` in `net/ipv4/tcp_input.c`, which is
+我们可以找到 `tcp_finish_connect` 的签名，它位于 `net/ipv4/tcp_input.c`，即
 ```c
 void tcp_finish_connect(struct sock *sk, struct sk_buff *skb);
 ```
 
-And so, to get access to the `struct sock*` we need to cast the **first** argument:
+因此，要拿到 `struct sock*`，需要把**第一个**参数做强制转换：
 ```c
 struct sock *sk = (struct sock *)PT_REGS_PARM1(ctx);
 ```
 
-## The challenge
+## 挑战
 
-A program connects to a remote server. The `connect()` syscall returns `-EINPROGRESS` (non-blocking), but the connection completes successfully.
+某个程序会连接到一台远程服务器。`connect()` 系统调用返回 `-EINPROGRESS`（非阻塞），但连接最终成功建立。
 
-### Socket properties
+### socket 的属性
 
-You can read the socket's properties with `bpf_probe_read_kernel`. Here
-are the relevant fields:
+你可以用 `bpf_probe_read_kernel` 读取 socket 的属性。这里是相关的字段：
 
 ```c
 struct sock {
@@ -62,12 +61,12 @@ struct sock_common {
 };
 ```
 
-Remember that ports are in big endian, so you'll need to use `bpf_ntohs` to convert it.
+注意端口是大端序，所以需要用 `bpf_ntohs` 来转换。
 
 
-### Your task
+### 你的任务
 
-Submit the destination port.
+提交目标端口。
 
 import QuickReference from '../../../components/QuickReference.tsx';
 

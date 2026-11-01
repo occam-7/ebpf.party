@@ -36,7 +36,7 @@ import("../wasm/syntax_check.mjs")
   .catch((err: Error) => {
     self.postMessage({
       type: "stderr",
-      text: "Failed to load WASM: " + err.message,
+      text: "加载 WASM 失败：" + err.message,
     });
   });
 

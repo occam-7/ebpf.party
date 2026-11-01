@@ -32,7 +32,7 @@ export default function ExerciseList({ metadata }: ExerciseListProps) {
         <section key={chapter.slug} className={styles.chapter}>
           <h2 className={styles.chapterHeader}>
             <span className={styles.chapterNumber}>
-              Chapter {chapter.number}:
+              第 {chapter.number} 章
             </span>{" "}
             {chapter.title}
           </h2>

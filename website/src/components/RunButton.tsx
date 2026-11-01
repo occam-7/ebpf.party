@@ -24,7 +24,7 @@ export default function RunButton({
       ) : (
         <>
           <Play size={16} />
-          Run
+          运行
         </>
       )}
     </button>

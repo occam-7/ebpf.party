@@ -16,7 +16,7 @@ export default function StructSelector({
 
   return (
     <div className={styles.structSelector}>
-      <label htmlFor="struct-select">Select struct to view:</label>
+      <label htmlFor="struct-select">选择要查看的结构体：</label>
       <select
         id="struct-select"
         value={selectedName}
