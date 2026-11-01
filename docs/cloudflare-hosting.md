@@ -73,12 +73,27 @@ wrangler deploy                           # 真正上线时把 vars.ORIGIN 换�
 2. Cloudflare Tunnel 把内网后端映射成 `https://...`，Worker 侧只填隧道域名 —— 不暴露源站 IP，推荐
 3. Cloudflare Containers：**未验证**。本项目的 runner 依赖 `/dev/kvm` 与 hugepages，容器是否提供嵌套虚拟化需要实测，不要假定可用
 
+Cloudflare CLI（`cf`，beta）走另一套项目配置：`worker/cloudflare.config.ts` 定义 Worker 与绑定，
+静态目录写在 `worker/wrangler.config.ts`。`cf migrate` 生成的配置默认带一个 `throw` 和 TODO，必须删掉。
+两条路径各自只认自己的配置文件，改配置时两边同步。`cf` 不能用 `wrangler login` 的凭据，需 `cf auth login`。
+
 ## 已知限制
 
 - 浏览器内类型检查（TCC WASM）未随仓库分发：本 fork 用占位模块保证 `pnpm build` 可跑通，
   代价是边打字边检查不产生诊断；真实编译错误在点「运行」后仍由后端 `clang` 报出
 - 只翻译了教程正文、界面文案与题目说明；代码、命令、辅助函数名、C 注释保持英文
-- 未部署到真实 Cloudflare 账号，`wrangler deploy` 只做过 `--dry-run`
+- 线上实例没有接执行主机，`/run_code/*` 一律 `503`；「运行」按钮当前不可用
+
+## 部署记录
+
+已用 `cf deploy` 部署到真实账号（Worker `ebpf-party-zh`，版本 `03cf8134-c97f-49ab-b674-661301ed11af`）：
+
+- 地址 <https://ebpf-party-zh.13148.workers.dev>
+- `GET /` → `200`，19465 字节，`lang="zh-CN"`，TTFB 180ms
+- `GET /exercises/chapter-0/1_theory/` → `200`；`GET /how-it-works/` → `200`
+- `POST /run_code/x` → `503 No eBPF execution backend configured (set ORIGIN)`（`ORIGIN` 为 `.invalid` 占位）
+- `GET /run_code/x` → `405`；未知路径 → `404`
+- 上传：49 个静态资源 + Worker 包 4.35 KiB（gzip 1.65 KiB）
 
 ## 验证记录
 
@@ -92,5 +107,5 @@ wrangler deploy                           # 真正上线时把 vars.ORIGIN 换�
 未验证：
 
 - 真实 eBPF 后端（需要一台带 KVM 的 Linux 主机 + 预编译 rootfs/vmlinux，本仓库不含这些产物）
-- 真实 Cloudflare 账号部署与自定义域（本次只做 `--dry-run`）
+- 自定义域与路由（已部署到 workers.dev，未绑域名）
 - Cloudflare Containers 承载 runner 的可行性

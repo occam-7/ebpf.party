@@ -26,9 +26,15 @@ This repo holds the website, content, backend & userspace for ebpf.party.
 的 SSE 流反代到真正的执行主机。执行后端（`clang -target bpf` + Firecracker/KVM）无法在
 Worker 上运行，原因与验证记录见 [docs/cloudflare-hosting.md](docs/cloudflare-hosting.md)。
 
+线上实例已部署（无执行后端，`/run_code` 返回 503）：<https://ebpf-party-zh.13148.workers.dev>
+
 ```bash
 cd website && pnpm install && pnpm build
-cd ../worker && npm install && wrangler deploy
+cd ../worker && npm install
+
+# 二选一：wrangler（wrangler.jsonc）或 cf（cloudflare.config.ts，需先 cf auth login）
+wrangler deploy
+npm run deploy:cf
 ```
 
 ## 上游原始说明
